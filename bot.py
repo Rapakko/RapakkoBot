@@ -1,5 +1,4 @@
-#testi
-# version 0.0.5 of RapakkoBot
+# version 0.0.5 of RapakkoBot 15/9/21
 
 import asyncio
 import random
@@ -285,24 +284,42 @@ async def on_message_delete(message):
     
     await channel.send(f'**Deleted message** \nMessage: {message.content} \nSent by: **{message.author}** in **#{message.channel.name}** \n‎‎')
 
-    #embed=discord.Embed(colour=embedColour)
-    #embed.set_author(name='Deleted message')
-    #embed.add_field(name=f'Sent by: {message.author}', value=f' \n Message: {message.content}', inline=False)
-    #embed.set_footer(text='Message sent in: ' + message.channel.name)
 
-    #await channel.send(embed=embed)
-
+# help command
 
 @client.command()
 async def help(ctx):
 
-    embed = discord.Embed(title = 'Here are the commands you can use:', 
-    description = '!ban @name reason - bans user from the server \n \n !kick @name reason - kicks user from server \n \n !clear amount - clears specified amount of messages and the command itself \n \n !purge - removes all messages from a specific channel \n \n !role @name role - gives specified role to user \n \n !removerole @name role - removes specified role from user',
-    colour = embedColour)
+    await ctx.send(f'''**Here are all the available commands:**\n
+**!help**    -   Shows this help message\n
+**!join**    -   I join the voice channel you are on\n
+**!leave**   -   I leave the voice channel I am on\n
+**!clear**   -   Removes specified number of messages   **Usage:** !clear 5\n
+**!purge**   -   Removes all messages from the channel the command is used on\n
+**!kick**    -   Kicks mentioned person, you can specify a reason but it isn't mandatory   **Usage:** !kick @member reason\n
+**!ban**     -   "Soft" Bans  mentioned person (gives the person "Banned" role which forces them to a specific channel named "Banned" with
+no permission to send messages),you can specify a reason but it isn't mandatory
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+''')
+    
+    #embed = discord.Embed(title = 'Here are the commands you can use:', 
+    #description = '!ban @name reason - bans user from the server \n \n !kick @name reason - kicks user from server \n \n !clear amount - clears specified amount of messages and the command itself \n \n !purge - removes all messages from a specific channel \n \n !role @name role - gives specified role to user \n \n !removerole @name role - removes specified role from user',
+    #colour = embedColour)
 
-    embed.set_footer(text=embedFooterText)
-    await ctx.send(embed=embed)
+    #embed.set_footer(text=embedFooterText)
+    #await ctx.send(embed=embed)
 
+
+# clear command
 
 @client.command()
 @commands.has_permissions(manage_messages=True)
@@ -323,6 +340,8 @@ async def clear_error(ctx, error):
         #await ctx.send(embed=embed)
         await ctx.send(f'You don\'t have permission to do that!')
 
+
+# purge command
 
 @client.command()
 @commands.has_permissions(administrator=True)
