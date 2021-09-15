@@ -1,4 +1,4 @@
-# version 0.0.4 of RapakkoBot
+# version 0.0.5 of RapakkoBot
 
 import asyncio
 import random
@@ -16,14 +16,11 @@ from discord.ext import commands
 from discord.ext.commands import Bot
 
 
-
-
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 
 
 client = Bot('!')
-
 client.remove_command('help')
 
 
@@ -31,15 +28,9 @@ embedColour = discord.Colour.from_rgb(0, 247, 255)
 embedFooterText = 'This is a placeholder'
 embedFooterIcon = ''
 
-class BadTarget(commands.CheckFailure):
-    pass
-
-
 
 def __init__(self):
     self.bot = discord.Client()
-
-
 
 
 @client.event
@@ -48,19 +39,13 @@ async def on_messages(message):
         return
 
 
-
-
 # features without user input
-
 
 @client.event
 async def on_ready():
     print('Logged in as {0.user}'.format(client))
     #await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name='people behave badly'))
     
-
-
-
 
 # bot join message
 
@@ -76,20 +61,14 @@ async def on_guild_join(guild):
     await channel.send(embed=embed)
     
 
-
-
 # welcome message
 
 @client.event
-async def on_member_join(member):
+async def on_member_join(member: discord.member):
     channel = discord.utils.get(member.guild.text_channels, name='welcome')
-    rules_channel = discord.utils.get(member.guild.text_channels, name='rules')
-    
-    message = f'Welcome to **{member.guild.name}** {member.mention}! Please head over to {rules_channel.mention}!'
+    #rules_channel = discord.utils.get(member.guild.text_channels, name='rules')
 
-    await channel.send(message)
-
-
+    await channel.send(f'Welcome to **{member.guild.name}** {member.mention}! Enjoy your time here!')
 
 
 # reaction roles
@@ -99,9 +78,7 @@ async def on_raw_reaction_add(payload):
     message_id = payload.message_id
 
 
-
-
-# matchmaking role add
+# add matchmaking role
 
     if message_id == 758669436705046529:
         guild_id = payload.guild_id
@@ -119,9 +96,7 @@ async def on_raw_reaction_add(payload):
             print('Role not found')
 
 
-
-
-# color roles add
+# add color roles
 
     if message_id == 759049512483946508:
         guild_id = payload.guild_id
@@ -157,7 +132,6 @@ async def on_raw_reaction_add(payload):
         elif payload.emoji.name == 'crewmate_white':
             role = discord.utils.get(guild.roles, name='White')
 
-
         if role is not None:
             member = discord.utils.find(lambda m : m.id == payload.user_id, guild.members)
             if member is not None:
@@ -168,10 +142,7 @@ async def on_raw_reaction_add(payload):
             print('Role not found')
 
 
-
-
-
-# matchmaking ping role add
+# add matchmaking ping role
 
     if message_id == 761304013421281350:
         guild_id = payload.guild_id
@@ -189,9 +160,7 @@ async def on_raw_reaction_add(payload):
             print('Role not found')
 
 
-
-
-# member role remove
+# remove member role 
 
 @client.event
 async def on_raw_reaction_remove(payload):
@@ -215,7 +184,7 @@ async def on_raw_reaction_remove(payload):
 
 
 
-# matchmaking role remove
+# remove matchmaking role 
 
     message_id = payload.message_id
     if message_id == 758669436705046529:
@@ -235,9 +204,7 @@ async def on_raw_reaction_remove(payload):
             print('Role not found')         
 
 
-
-
-# color roles remove
+# remove color roles 
 
     message_id = payload.message_id
     if message_id == 759049512483946508:
@@ -273,9 +240,7 @@ async def on_raw_reaction_remove(payload):
 
         if payload.emoji.name == 'crewmate_white':
             role = discord.utils.get(guild.roles, name='White')
-
         
-
         if role is not None:
             member = discord.utils.find(lambda m : m.id == payload.user_id, guild.members)
             if member is not None:
@@ -286,10 +251,7 @@ async def on_raw_reaction_remove(payload):
             print('Role not found')     
 
 
-
-
-
-# matchmaking ping role remove
+# remove matchmaking ping role 
 
 
     message_id = payload.message_id
@@ -310,20 +272,15 @@ async def on_raw_reaction_remove(payload):
             print('Role not found') 
 
 
-
-
 # text commands
 
 
 # deleted message log
 
-
 @client.event
 async def on_message_delete(message):
 
     channel = discord.utils.get(message.guild.text_channels, name='bot-log')    
-    
-    
     
     await channel.send(f'**Deleted message** \nMessage: {message.content} \nSent by: **{message.author}** in **#{message.channel.name}** \n‎‎')
 
@@ -331,8 +288,6 @@ async def on_message_delete(message):
     #embed.set_author(name='Deleted message')
     #embed.add_field(name=f'Sent by: {message.author}', value=f' \n Message: {message.content}', inline=False)
     #embed.set_footer(text='Message sent in: ' + message.channel.name)
-
-    
 
     #await channel.send(embed=embed)
 
@@ -348,14 +303,11 @@ async def help(ctx):
     await ctx.send(embed=embed)
 
 
-
-
 @client.command()
 @commands.has_permissions(manage_messages=True)
 async def clear(ctx, limit: int):
     await ctx.channel.purge(limit=limit + 1)
     await ctx.message.delete()
-
 
 
 @clear.error
@@ -369,9 +321,6 @@ async def clear_error(ctx, error):
     if isinstance(error, commands.MissingPermissions):
         #await ctx.send(embed=embed)
         await ctx.send(f'You don\'t have permission to do that!')
-
-
-
 
 
 @client.command()
@@ -397,7 +346,6 @@ async def purge(ctx):
             channel_name = ctx.channel.name
             await ctx.guild.create_text_channel(f'{channel_name}', category=category, position=channel_position, topic=channel_topic, overwrites=channel_permissions, slowmode_delay=slowmode)
                 
-
             await ctx.channel.delete()
                 
             new_channel = discord.utils.get(ctx.guild.text_channels, name=f'{channel_name}')
@@ -408,13 +356,6 @@ async def purge(ctx):
     except asyncio.TimeoutError:
         await ctx.send('Purge canceled (confirmation timer ran out). No messages removed.')
         
-    
-        
-
-    
-
-
-
 
 @purge.error
 async def purge_error(ctx, error):
@@ -428,10 +369,7 @@ async def purge_error(ctx, error):
         await ctx.send(embed=embed)
 
 
-
-
 # voice channel/music commands
-
 
 @client.command()
 async def join(ctx):
@@ -450,11 +388,6 @@ async def join(ctx):
     else:
         await ctx.send('You\'re not connected to a Voice Channel.')
     
-    
-
-
-
-
 
 @client.command()
 async def leave(ctx):
@@ -465,10 +398,9 @@ async def leave(ctx):
         print ('Disconnected from Voice Chat')
 
 
-
-
 # moderation commands
 
+# bad word blocker
 
 with open('badwords.txt', 'r') as f:
     bad_words = '|'.join(s for l in f for s in l.split(', '))
@@ -482,8 +414,6 @@ async def on_message(message):
         await message.channel.send(f'{message.author.mention} your message was removed because it was inappropriate')
     else:
         await client.process_commands(message)
-
-
 
 
 # kick command
@@ -523,9 +453,6 @@ async def kick(ctx, member: discord.Member, *args):
     await ctx.message.delete()
     
 
-
-
-
 @kick.error
 async def kick_error(ctx, error):
     
@@ -538,8 +465,6 @@ async def kick_error(ctx, error):
     if isinstance(error, commands.MissingPermissions):
         #await ctx.send(embed=embed)
         await ctx.send(f'You don\'t have permission to do that!')
-
-
 
 
 # soft ban
@@ -558,8 +483,6 @@ async def ban(ctx, member: discord.Member, *args):
         await ctx.send(f'You can\'t ban that person!')
         return
 
-
-
     reason = ''
     if args != ():
         reason = 'Reason: **'
@@ -576,18 +499,11 @@ async def ban(ctx, member: discord.Member, *args):
     await ctx.message.delete()
 
 
-
 @ban.error
 async def ban_error(ctx, error):
     
     if isinstance(error, commands.MissingPermissions):
         await ctx.send(f'You don\'t have permission to do that!')
-
-
-
-
-
-
 
 
 # permaban command
@@ -627,8 +543,6 @@ async def permaban(ctx, member: discord.Member, *args, reason=None):
     await ctx.message.delete()
 
 
-
-
 @permaban.error
 async def permaban_error(ctx, error):
     
@@ -642,8 +556,6 @@ async def permaban_error(ctx, error):
         await ctx.send(f'You don\'t have permission to do that!')
         
         #await ctx.send(embed=embed)
-
-
 
 
 # role command
@@ -663,8 +575,6 @@ async def role(ctx, member: discord.Member, role):
     await member.add_roles(role)
 
 
-
-
 @role.error
 async def role_error(ctx, error):
     embed = discord.Embed( 
@@ -675,9 +585,6 @@ async def role_error(ctx, error):
     
     if isinstance(error, commands.has_permissions):
         await ctx.send(embed=embed)
-
-
-
 
 
 # remvove role command
@@ -695,8 +602,6 @@ async def removerole(ctx, member: discord.Member, role):
 
     await ctx.send(embed=embed)
     await member.remove_roles(role)
-
-
 
 
 @removerole.error
