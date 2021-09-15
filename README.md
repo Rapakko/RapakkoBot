@@ -21,7 +21,7 @@ Required permissions for each command (listed after command name):
 - Leave voice channel command (not very useful right now)
 - Bad word blocker (using customizable file badwords.txt)
 - Kick command 2
-- Ban command 1 ("soft ban", gives banned role and forces member to see a channel named banned, unban command will be added in the future)
+- Ban command 1 ("soft ban", gives banned role and forces member to see a channel named banned, might implement temporary bans at some point, unban command will be added in the future)
 - Permaban command 1 (uses the normal way of banning people from Discord servers)
 - Role command 3 (adds role to user)
 - Remove role command 3
