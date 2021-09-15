@@ -1,3 +1,4 @@
+#testi
 # version 0.0.5 of RapakkoBot
 
 import asyncio
@@ -555,7 +556,7 @@ async def permaban_error(ctx, error):
     if isinstance(error, commands.MissingPermissions):
         await ctx.send(f'You don\'t have permission to do that!')
         
-        #await ctx.send(embed=embed)
+         #await ctx.send(embed=embed)
 
 
 # role command
