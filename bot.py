@@ -274,6 +274,17 @@ async def on_raw_reaction_remove(payload):
 
 # text commands
 
+# random emoji command
+
+@client.command()
+async def emoji(ctx):
+
+    emojis = ['<:SleepySulo:888035815714861088>', '<:SleepySulo2:888035816117526548>']
+
+    await ctx.send(random.choice(emojis))
+
+
+
 
 # deleted message log
 
