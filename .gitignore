@@ -1,0 +1,4 @@
+.env
+badwords.txt
+run.sh
+warnings.json
