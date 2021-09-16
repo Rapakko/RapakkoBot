@@ -1,4 +1,4 @@
-# version 0.0.5 of RapakkoBot 15/9/21
+# version 0.0.6 of RapakkoBot 16/9/21
 
 import asyncio
 import random
@@ -290,26 +290,25 @@ async def on_message_delete(message):
 @client.command()
 async def help(ctx):
 
-    await ctx.send(f'''**Here are all the available commands:**\n
-**!help**    -   Shows this help message\n
-**!join**    -   I join the voice channel you are on\n
-**!leave**   -   I leave the voice channel I am on\n
-**!clear**   -   Removes specified number of messages   **Usage:** !clear 5\n
-**!purge**   -   Removes all messages from the channel the command is used on\n
-**!kick**    -   Kicks mentioned person, you can specify a reason but it isn't mandatory   **Usage:** !kick @member reason\n
-**!ban**     -   "Soft" Bans  mentioned person (gives the person "Banned" role which forces them to a specific channel named "Banned" with
-no permission to send messages),you can specify a reason but it isn't mandatory
+    embed = discord.Embed(title = 'Go check out the RapakkoBot GitHub page for the full documentation!',
+    url = 'https://github.com/Rapakko/RapakkoBot',
+    colour = embedColour)
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-''')
+
+    await ctx.send(f'''**Here are all the available commands:**\n ```
+!help   -  Shows this help message\n
+!join   -  I join the voice channel you are on\n
+!leave  -  I leave the voice channel I am on\n
+!clear  -  Removes specified number of messages  Usage: !clear 5\n
+!purge  -  Removes all messages from the channel the command is used on\n
+!kick   -  Kicks mentioned member, you can specify a reason but it isn't mandatory   Usage: !kick @member reason\n
+!ban    -  Gives "Banned" role to mentioned member forcing them to a specific "Banned" channel with
+no permission to send messages, you can specify a reason but it isn't mandatory  Usage:  !ban @member reason\n
+!pban   -  Permanently bans mentioned member, you can specify a reason but it isn't mandatory  Usage:  !pban @member reason\n
+!role   -  Gives mentioned member specified role, cannot be used for roles higher than the bot's own role(s)   Usage: !role @member role\n
+!rrole  -  Removes specified role from mentioned member, cannot be used for roles higher than the bot's own role(s)  Usage: !rrole @member role    
+```\n‎''')
+    await ctx.send(embed=embed)
     
     #embed = discord.Embed(title = 'Here are the commands you can use:', 
     #description = '!ban @name reason - bans user from the server \n \n !kick @name reason - kicks user from server \n \n !clear amount - clears specified amount of messages and the command itself \n \n !purge - removes all messages from a specific channel \n \n !role @name role - gives specified role to user \n \n !removerole @name role - removes specified role from user',
@@ -530,7 +529,7 @@ async def ban_error(ctx, error):
 
 @client.command()
 @commands.has_permissions(ban_members=True)
-async def permaban(ctx, member: discord.Member, *args, reason=None):
+async def pban(ctx, member: discord.Member, *args, reason=None):
 
     if member == ctx.author:
         await ctx.send(f'You can\'t ban yourself!')
@@ -563,8 +562,8 @@ async def permaban(ctx, member: discord.Member, *args, reason=None):
     await ctx.message.delete()
 
 
-@permaban.error
-async def permaban_error(ctx, error):
+@pban.error
+async def pban_error(ctx, error):
     
     #embed = discord.Embed( 
     #description = f'You don\'t have permission to do that!\n',
@@ -584,34 +583,47 @@ async def permaban_error(ctx, error):
 @commands.has_permissions(manage_roles=True)
 async def role(ctx, member: discord.Member, role):
     role = discord.utils.get(ctx.guild.roles, name=f'{role}')
-
-    embed = discord.Embed( 
-    description = f'{ctx.author.mention} added {role} role to {member.mention}.\n',
-    colour = embedColour)
-
-    embed.set_footer(text=embedFooterText)
-
-    await ctx.send(embed=embed)
-    await member.add_roles(role)
-
-
-@role.error
-async def role_error(ctx, error):
-    embed = discord.Embed( 
-    description = f'You don\'t have permission to do that!\n',
-    colour = embedColour)
-
-    embed.set_footer(text=embedFooterText)
     
-    if isinstance(error, commands.has_permissions):
-        await ctx.send(embed=embed)
+    print(ctx.guild.me.roles)
+
+    bot_role = discord.utils.get(ctx.guild.me.roles, name='RapakkoBot')
+    print(bot_role)
+
+    if role == None:
+        await ctx.send(f'That role doesn\'t exist!')
+        return
+
+    if ctx.guild.me.top_role <= role or bot_role:
+        await ctx.send(f'That role is above or the same as my highest role, I can\'t give that role to {member.mention}!')
+        return
+    
+    if role in member.roles:
+        await ctx.send(f'{member.mention} already has that role!')
+        return
+
+    await ctx.send(f'{ctx.author.mention} added **{role}** role to {member.mention}')
+    await member.add_roles(role)
+    
+    
+        
+
+#@role.error
+#async def role_error(ctx, error):
+#    embed = discord.Embed( 
+#    description = f'You don\'t have permission to do that!\n',
+#    colour = embedColour)
+
+#    embed.set_footer(text=embedFooterText)
+    
+#    if isinstance(error, commands.has_permissions):
+#        await ctx.send(embed=embed)
 
 
-# remvove role command
+# remove role command
 
 @client.command()
 @commands.has_permissions(manage_roles=True)
-async def removerole(ctx, member: discord.Member, role):
+async def rrole(ctx, member: discord.Member, role):
     role = discord.utils.get(ctx.guild.roles, name=f'{role}')
 
     embed = discord.Embed( 
@@ -624,8 +636,8 @@ async def removerole(ctx, member: discord.Member, role):
     await member.remove_roles(role)
 
 
-@removerole.error
-async def removerole_error(ctx, error):
+@rrole.error
+async def rrole_error(ctx, error):
     embed = discord.Embed( 
     description = f'You don\'t have permission to do that!\n',
     colour = embedColour)
