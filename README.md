@@ -1,6 +1,6 @@
 Proper documentation for the bot will be added here in the future.
 
-Current features (as of version 0.0.7 November th 2021):
+Current features (as of version 0.0.7 November 17th 2021):
 
 Required permissions for each command (listed after command name):
 0 = administrator
