@@ -1,4 +1,4 @@
-# version 0.0.6 of RapakkoBot 16/9/21
+# version 0.0.7 of RapakkoBot 17/11/21
 
 import asyncio
 import random
@@ -44,7 +44,7 @@ async def on_messages(message):
 @client.event
 async def on_ready():
     print('Logged in as {0.user}'.format(client))
-    #await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name='people behave badly'))
+    await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name='!help'))
     
 
 # bot join message
@@ -284,8 +284,6 @@ async def emoji(ctx):
     await ctx.send(random.choice(emojis))
 
 
-
-
 # deleted message log
 
 @client.event
@@ -293,7 +291,22 @@ async def on_message_delete(message):
 
     channel = discord.utils.get(message.guild.text_channels, name='bot-log')    
     
-    await channel.send(f'**Deleted message** \nMessage: {message.content} \nSent by: **{message.author}** in **#{message.channel.name}** \n‎‎')
+    if not message.author.has_permissions(manage_messages):
+
+        await channel.send(f'**Deleted message** \nMessage: {message.content} \nSent by: **{message.author}** in **#{message.channel.name}** \n')
+        return
+
+@client.event
+async def on_message(message):
+    if '<@745237775028060232>' in message.content or '<@!745939861017722921>' in message.content: #tänne botin ID. Molemmissa muodoissa, koska mobiililla ja pyötäkoneella eri muoto
+        await message.channel.send(f'Hello {message.author.mention}! Do you need help with something? Try using !help to learn more about me!')
+    await client.process_commands(message) #ilman tätä muut komennot ei toimi
+
+
+@client.event
+async def on_message(message):
+    if client.mentioned_in(message):
+        await message.channel.send(f'Hello {message.author.mention}! Do you need help with something? Try using !help to learn more about me!')
 
 
 # help command
@@ -317,16 +330,10 @@ async def help(ctx):
 no permission to send messages, you can specify a reason but it isn't mandatory  Usage:  !ban @member reason\n
 !pban   -  Permanently bans mentioned member, you can specify a reason but it isn't mandatory  Usage:  !pban @member reason\n
 !role   -  Gives mentioned member specified role, cannot be used for roles higher than the bot's own role(s)   Usage: !role @member role\n
-!rrole  -  Removes specified role from mentioned member, cannot be used for roles higher than the bot's own role(s)  Usage: !rrole @member role    
-```\n‎''')
+!rrole  -  Removes specified role from mentioned member, cannot be used for roles higher than the bot's own role(s)  Usage: !rrole @member role\n
+!emoji  -  Sends a randomized emoji from a set list of emojis 
+```''')
     await ctx.send(embed=embed)
-    
-    #embed = discord.Embed(title = 'Here are the commands you can use:', 
-    #description = '!ban @name reason - bans user from the server \n \n !kick @name reason - kicks user from server \n \n !clear amount - clears specified amount of messages and the command itself \n \n !purge - removes all messages from a specific channel \n \n !role @name role - gives specified role to user \n \n !removerole @name role - removes specified role from user',
-    #colour = embedColour)
-
-    #embed.set_footer(text=embedFooterText)
-    #await ctx.send(embed=embed)
 
 
 # clear command
@@ -334,8 +341,17 @@ no permission to send messages, you can specify a reason but it isn't mandatory 
 @client.command()
 @commands.has_permissions(manage_messages=True)
 async def clear(ctx, limit: int):
+    
+    #if limit != int:
+    #    print('discord sucks ass')
+    #    await ctx.send('Please enter a number to specify the amount of messages you wish to remove!')
+    #    return
+
     await ctx.channel.purge(limit=limit + 1)
-    await ctx.message.delete()
+    #await ctx.message.delete()
+    await ctx.channel.send(f'Removed {limit} messages. Requested by {ctx.author.mention}.')
+       
+
 
 
 @clear.error
@@ -503,8 +519,10 @@ async def kick_error(ctx, error):
 @commands.has_permissions(ban_members=True)
 async def ban(ctx, member: discord.Member, *args):
     
-    role = discord.utils.get(ctx.guild.roles, name='Banned')
+    banned_role = discord.utils.get(ctx.guild.roles, name='Banned')
     
+    member_role = discord.utils.get(ctx.guild.roles, name='Member')
+
     if member == ctx.author:
         await ctx.send(f'You can\'t ban yourself!')
         return 
@@ -525,15 +543,47 @@ async def ban(ctx, member: discord.Member, *args):
 
     await ctx.send(f'{member.mention} has been banned. {reason} \n \nBanned by {ctx.author.mention}')
     
-    await member.add_roles(role)
-    await ctx.message.delete()
+    if member_role in member.roles:
+        await member.remove_roles(member_role)
 
+    await member.add_roles(banned_role)
+    await ctx.message.delete()
 
 @ban.error
 async def ban_error(ctx, error):
     
     if isinstance(error, commands.MissingPermissions):
         await ctx.send(f'You don\'t have permission to do that!')
+
+
+# unban for soft ban
+
+@client.command()
+@commands.has_permissions(ban_members=True)
+async def unban(ctx, member: discord.Member):
+
+    banned_role = discord.utils.get(ctx.guild.roles, name='Banned')
+
+    member_role = discord.utils.get(ctx.guild.roles, name='Member')
+
+    if member == ctx.author:
+        await ctx.send(f'You can\'t unban yourself!')
+        return 
+
+    if member.guild_permissions.ban_members:
+        await ctx.send(f'You can\'t unban that person!')
+        return
+
+    channel = await member.create_dm()
+    await channel.send(f'You were unbanned from **{ctx.guild.name}**.')
+
+    await ctx.send(f'{member.mention} has been unbanned. \n \n Unbanned by {ctx.author.mention}')
+    
+    await member.remove_roles(banned_role)
+    await member.add_roles(member_role)
+    await ctx.message.delete()
+
+
 
 
 # permaban command
@@ -604,7 +654,7 @@ async def role(ctx, member: discord.Member, role):
         await ctx.send(f'That role doesn\'t exist!')
         return
 
-    if ctx.guild.me.top_role <= role or bot_role:
+    if ctx.guild.me.top_role <= role: #or bot_role:
         await ctx.send(f'That role is above or the same as my highest role, I can\'t give that role to {member.mention}!')
         return
     
@@ -643,7 +693,19 @@ async def rrole(ctx, member: discord.Member, role):
 
     embed.set_footer(text=embedFooterText)
 
-    await ctx.send(embed=embed)
+    if role == None:
+        await ctx.send(f'That role doesn\'t exist!')
+        return
+
+    if ctx.guild.me.top_role <= role: #or bot_role:
+        await ctx.send(f'That role is above or the same as my highest role, I can\'t give that role to {member.mention}!')
+        return
+    
+    if not role in member.roles:
+        await ctx.send(f'{member.mention} doesn\'t have that role!')
+        return
+
+    await ctx.send(f'{ctx.author.mention} removed **{role}** from {member.mention}')
     await member.remove_roles(role)
 
 
