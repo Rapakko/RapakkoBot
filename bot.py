@@ -19,8 +19,10 @@ from discord.ext.commands import Bot
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 
+intents = discord.Intents.default()
+intents.reactions = True
 
-client = Bot('!')
+client = Bot('!', intents=intents)
 client.remove_command('help')
 
 
@@ -71,7 +73,21 @@ async def on_member_join(member: discord.member):
     await channel.send(f'Welcome to **{member.guild.name}** {member.mention}! Enjoy your time here!')
 
 
-# reaction roles
+# working (hopefully) reaction roles
+
+@client.event
+async def on_reaction_add(reaction, user):
+    if reaction.message == 911610874471514112:
+        if reaction.emoji.name == ':red_circle:':
+            #role = discord.utils.get(reaction.message.guild.roles, name='Devilish Red')
+            return
+            if role not in user.roles:
+                user.add_roles(role)
+
+
+
+
+# very broken reaction roles
 
 @client.event
 async def on_raw_reaction_add(payload):
@@ -87,7 +103,8 @@ async def on_raw_reaction_add(payload):
             role = discord.utils.get(guild.roles, name='Matchmaking')
 
         if role is not None:
-            member = discord.utils.find(lambda m : m.id == payload.user_id, guild.members)
+            member = payload.member
+            # member = discord.utils.find(lambda m : m.id == payload.user_id, guild.members)
             if member is not None:
                 await member.add_roles(role)
                 print('Done')
@@ -98,27 +115,27 @@ async def on_raw_reaction_add(payload):
 
 # add color roles
 
-    if message_id == 759049512483946508:
+    if message_id == 911610874471514112:
         guild_id = payload.guild_id
         guild = discord.utils.find(lambda g : g.id == guild_id, client.guilds)
         
-        if payload.emoji.name == 'crewmate_pink':
-            role = discord.utils.get(guild.roles, name='Pink')
+        if payload.emoji.name == 'red_circle':
+            role = discord.utils.get(guild.roles, name='Devilish Red')
 
         elif payload.emoji.name == 'crewmate_red':
-            role = discord.utils.get(guild.roles, name='Red')
+            role = discord.utils.get(guild.roles, name='Purple Punchers')
 
         if payload.emoji.name == 'crewmate_orange':
-            role = discord.utils.get(guild.roles, name='Orange')
+            role = discord.utils.get(guild.roles, name='Blue Bandits')
 
         elif payload.emoji.name == 'crewmate_yellow':
-            role = discord.utils.get(guild.roles, name='Yellow')
+            role = discord.utils.get(guild.roles, name='Green Frogs')
 
         if payload.emoji.name == 'crewmate_lime':
-            role = discord.utils.get(guild.roles, name='Lime')
+            role = discord.utils.get(guild.roles, name='Yellow Gold')
 
         elif payload.emoji.name == 'crewmate_green':
-            role = discord.utils.get(guild.roles, name='Green')
+            role = discord.utils.get(guild.roles, name='Shadows in the dark')
 
         if payload.emoji.name == 'crewmate_cyan':
             role = discord.utils.get(guild.roles, name='Cyan')
@@ -132,14 +149,14 @@ async def on_raw_reaction_add(payload):
         elif payload.emoji.name == 'crewmate_white':
             role = discord.utils.get(guild.roles, name='White')
 
-        if role is not None:
-            member = discord.utils.find(lambda m : m.id == payload.user_id, guild.members)
-            if member is not None:
-                await member.add_roles(role)
-                print('Done')
-            else: print('Member not found')
-        else:
-            print('Role not found')
+            if role is not None:
+                member = discord.utils.find(lambda m : m.id == payload.user_id, guild.members)
+                if member is not None:
+                    await member.add_roles(role)
+                    print('Done')
+                else: print('Member not found')
+            else:
+                print('Role not found')
 
 
 # add matchmaking ping role
@@ -274,6 +291,16 @@ async def on_raw_reaction_remove(payload):
 
 # text commands
 
+# say command
+
+@client.command()
+@commands.has_permissions(manage_messages=True)
+async def say(ctx, channel:discord.TextChannel, *, message):
+
+    await ctx.message.delete()
+
+    await ctx.send(message)
+
 # random emoji command
 
 @client.command()
@@ -290,11 +317,11 @@ async def emoji(ctx):
 async def on_message_delete(message):
 
     channel = discord.utils.get(message.guild.text_channels, name='bot-log')    
-    
-    if not message.author.has_permissions(manage_messages):
 
-        await channel.send(f'**Deleted message** \nMessage: {message.content} \nSent by: **{message.author}** in **#{message.channel.name}** \n')
+    if message.content.startswith('!'):
         return
+    else:
+        await channel.send(f'‎\n**Deleted message** \nMessage: {message.content} \nSent by: **{message.author}** in {message.channel.mention} \n')
 
 @client.event
 async def on_message(message):
@@ -328,6 +355,7 @@ async def help(ctx):
 !kick   -  Kicks mentioned member, you can specify a reason but it isn't mandatory   Usage: !kick @member reason\n
 !ban    -  Gives "Banned" role to mentioned member forcing them to a specific "Banned" channel with
 no permission to send messages, you can specify a reason but it isn't mandatory  Usage:  !ban @member reason\n
+!unban  -  Removes "Banned" role from mentioned user  Usage: !unban @member\n
 !pban   -  Permanently bans mentioned member, you can specify a reason but it isn't mandatory  Usage:  !pban @member reason\n
 !role   -  Gives mentioned member specified role, cannot be used for roles higher than the bot's own role(s)   Usage: !role @member role\n
 !rrole  -  Removes specified role from mentioned member, cannot be used for roles higher than the bot's own role(s)  Usage: !rrole @member role\n
@@ -340,17 +368,28 @@ no permission to send messages, you can specify a reason but it isn't mandatory 
 
 @client.command()
 @commands.has_permissions(manage_messages=True)
-async def clear(ctx, limit: int):
-    
-    #if limit != int:
-    #    print('discord sucks ass')
-    #    await ctx.send('Please enter a number to specify the amount of messages you wish to remove!')
-    #    return
+async def clear(ctx, *arg):
 
-    await ctx.channel.purge(limit=limit + 1)
-    #await ctx.message.delete()
-    await ctx.channel.send(f'Removed {limit} messages. Requested by {ctx.author.mention}.')
-       
+    channel = discord.utils.get(ctx.guild.text_channels, name='bot-log')
+
+    if arg == ():
+        await ctx.send('Please enter a number to specify the amount of messages you wish to remove!')
+    
+    limit = int(arg[0])
+
+    if type(limit) == int and limit > 0:
+        await ctx.channel.purge(limit=limit + 1)
+
+    if limit == 0 or limit < 0:
+        await ctx.send(f'I can\'t remove {limit} messages. Please enter a bigger number.')
+
+    if type(limit) != int:
+        return
+
+    if limit == 1:
+        await channel.send(f'Cleared {limit} message from {ctx.channel.mention}\nRequested by: **{ctx.author}**\n')
+    if limit > 1:
+        await channel.send(f'Cleared {limit} messages from {ctx.channel.mention}\nRequested by: **{ctx.author}**\n')
 
 
 
@@ -539,8 +578,11 @@ async def ban(ctx, member: discord.Member, *args):
         reason = reason+'**'
 
     channel = await member.create_dm()
-    await channel.send(f'You were banned from **{ctx.guild.name}**. {reason}. Please consider changing your behaviour to avoid this happening on other servers.')
-
+    
+    if reason:
+        await channel.send(f'You were banned from **{ctx.guild.name}**. Reason: {reason}. Please consider changing your behaviour to avoid this happening on other servers.')
+    else:
+        await channel.send(f'You were banned from **{ctx.guild.name}**. Reason: not specified. Please consider changing your behaviour to avoid this happening on other servers.')
     await ctx.send(f'{member.mention} has been banned. {reason} \n \nBanned by {ctx.author.mention}')
     
     if member_role in member.roles:
@@ -580,10 +622,9 @@ async def unban(ctx, member: discord.Member):
     await ctx.send(f'{member.mention} has been unbanned. \n \n Unbanned by {ctx.author.mention}')
     
     await member.remove_roles(banned_role)
-    await member.add_roles(member_role)
+    if member_role:
+        await member.add_roles(member_role)
     await ctx.message.delete()
-
-
 
 
 # permaban command
@@ -664,20 +705,6 @@ async def role(ctx, member: discord.Member, role):
 
     await ctx.send(f'{ctx.author.mention} added **{role}** role to {member.mention}')
     await member.add_roles(role)
-    
-    
-        
-
-#@role.error
-#async def role_error(ctx, error):
-#    embed = discord.Embed( 
-#    description = f'You don\'t have permission to do that!\n',
-#    colour = embedColour)
-
-#    embed.set_footer(text=embedFooterText)
-    
-#    if isinstance(error, commands.has_permissions):
-#        await ctx.send(embed=embed)
 
 
 # remove role command
