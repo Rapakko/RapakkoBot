@@ -1,4 +1,4 @@
-# version 0.0.7 of RapakkoBot 17/11/21
+# version 0.0.8 of RapakkoBot 17/12/21
 
 import asyncio
 import random
